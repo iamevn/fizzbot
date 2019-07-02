@@ -38,10 +38,11 @@ def try_answer(question_url, answer):
         return response
 
 # keep trying answers until a correct one is given
-def get_correct_answer(question_url):
+def get_correct_answer(question_url, question_data):
     while True:
-        answer = input('Enter your answer:\n')
-
+        # answer = input('Enter your answer:\n')
+        answer = solve(question_data)
+        print(answer)
         response = try_answer(question_url, answer)
 
         if (response.get('result') == 'interview complete'):
@@ -49,8 +50,28 @@ def get_correct_answer(question_url):
             exit()
 
         if (response.get('result') == 'correct'):
-            input('press enter to continue')
+            # input('press enter to continue')
             return response.get('nextQuestion')
+
+# solve it
+def solve(question_data):
+    if 'rules' not in question_data:  # this is fav lang question
+        return 'Racket'
+    rules = {rule['number']: rule['response'] for rule in question_data['rules']}
+    numbers = question_data['numbers']
+    def fizzy(n):
+        matches = False
+        ret = ''
+        for trigger, response in rules.items():
+            if n % trigger == 0:
+                matches = True
+                ret += response
+        if matches:
+            return ret
+        else:
+            return str(n)
+
+    return ' '.join(fizzy(n) for n in numbers)
 
 # do the next question
 def do_question(domain, question_url):
@@ -65,7 +86,7 @@ def do_question(domain, question_url):
     next_question = question_data.get('nextQuestion')
 
     if next_question: return next_question
-    return get_correct_answer(question_url)
+    return get_correct_answer(question_url, question_data)
 
 
 def main():
